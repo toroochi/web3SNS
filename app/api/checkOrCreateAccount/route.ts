@@ -1,32 +1,32 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextRequest, NextResponse } from "next/server";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method === "POST") {
-    const { account } = req.body;
+export async function POST(req: NextRequest) {
+  try {
+    const { account } = await req.json();
 
     // Check if account exists in your database
     const existingAccount = await findAccount(account);
 
     if (existingAccount) {
-      return res.status(200).json({ success: true });
+      return NextResponse.json({ success: true }, { status: 200 });
     }
 
     // If not, create a new account
     const newAccount = await createAccount(account);
 
     if (newAccount) {
-      return res.status(200).json({ success: true });
+      return NextResponse.json({ success: true }, { status: 200 });
     } else {
-      return res
-        .status(500)
-        .json({ success: false, message: "Failed to create account" });
+      return NextResponse.json(
+        { success: false, message: "Failed to create account" },
+        { status: 500 }
+      );
     }
-  } else {
-    res.setHeader("Allow", ["POST"]);
-    res.status(405).end(`Method ${req.method} Not Allowed`);
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, message: error.message },
+      { status: 500 }
+    );
   }
 }
 
