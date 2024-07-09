@@ -1,29 +1,28 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextRequest, NextResponse } from "next/server";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/app/src/hook/firebase";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method === "POST") {
-    const { message } = req.body;
+export async function POST(req: NextRequest) {
+  try {
+    const { message } = await req.json();
+    const docRef = await addDoc(collection(db, "messages"), {
+      message,
+      timestamp: serverTimestamp(),
+    });
 
-    // Implement your logic to save the message
-    const success = await saveMessage(message);
-
-    if (success) {
-      res.status(200).json({ success: true });
-    } else {
-      res
-        .status(500)
-        .json({ success: false, message: "Failed to post message" });
-    }
-  } else {
-    res.setHeader("Allow", ["POST"]);
-    res.status(405).end(`Method ${req.method} Not Allowed`);
+    return NextResponse.json({ success: true, id: docRef.id }, { status: 200 });
+  } catch (error) {
+    console.error("Error adding document: ", error);
+    return NextResponse.json(
+      { success: false, message: error.message },
+      { status: 500 }
+    );
   }
 }
 
-async function saveMessage(message: string) {
-  // Implement your database logic here
-  return true; // Replace with actual database insertion
+export function GET() {
+  return NextResponse.json(
+    { message: "Method GET not allowed" },
+    { status: 405 }
+  );
 }
